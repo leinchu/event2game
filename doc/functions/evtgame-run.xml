@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- $Revision$ -->
+
+<refentry xml:id="function.evtgame-run" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <refnamediv>
+  <refname>evtgame_run</refname>
+  <refpurpose>Description</refpurpose>
+ </refnamediv>
+
+ <refsect1 role="description">
+  &reftitle.description;
+  <methodsynopsis>
+   <type>boolean</type><methodname>evtgame_run</methodname>
+   <methodparam choice="opt"><type>int</type><parameter>port</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>recv_timeout</parameter></methodparam>
+   <methodparam choice="opt"><type>int</type><parameter>send_timeout</parameter></methodparam>
+  </methodsynopsis>
+  <para>
+Runs socket server and listening port <parameter>port</parameter>. And the server is runing in a single thread.
+  </para>
+
+ </refsect1>
+
+ <refsect1 role="parameters">
+  &reftitle.parameters;
+  <variablelist>
+   <varlistentry>
+    <term><parameter>port</parameter></term>
+    <listitem>
+     <para>
+      Server listening this port, and default is 8080
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><parameter>recv_timeout</parameter></term>
+    <listitem>
+     <para>
+      Libevent receive time out in seconds, if client don’t send any message to server for recv_timeout seconds, it will be closed by server.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><parameter>send_timeout</parameter></term>
+    <listitem>
+     <para>
+      Libevent send time out.
+     </para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+ </refsect1>
+
+ <refsect1 role="returnvalues">
+  &reftitle.returnvalues;
+  <para>
+Returns boolean
+  </para>
+ </refsect1>
+
+ <refsect1 role="examples">
+  &reftitle.examples;
+  <para>
+   <example>
+    <title><function>evtgame_cgi_filepath</function> example</title>
+    <programlisting role="php">
+	<![CDATA[
+<?php
+error_reporting(E_ALL);
+ini_set('display_errors', true);
+
+if(!function_exists('evtgame_send'))
+{
+	exit('Event2game is not exists!');
+}
+
+$connections = array();
+
+function open($rsid, $fd){
+	global $connections;
+	$connections[$fd] = $rsid;
+	var_dump($rsid, $fd);
+	echo __FILE__.' ( '.__LINE__.' ) open : '.$fd.chr(10);
+}
+
+function close($fd){
+	global $connections;
+	unset($connections[$fd]);
+	echo __FILE__.' ( '.__LINE__.' ) close : '.$fd.chr(10);
+}
+
+function recv($fd, $str){
+	global $connections;
+	echo __FILE__.' ( '.__LINE__.' ) '.chr(10);
+	echo $fd .' say '.$str.chr(10);	
+
+	evtgame_send($connections[$fd], 'You say: '.$str);
+}
+
+function storage_job($id)
+{
+	echo __FILE__.' ( '.__LINE__.' ) '.chr(10);
+	echo 'Storage_job start, my no. is: '.$id.chr(10);
+	//doing something, you must careful of using global variables, or you will got segment error!
+}
+
+$rs = evtgame_set_function("open","close","recv");
+
+if($rs)
+{
+	echo "Set function: OK\n";
+	evtgame_run();
+}else
+	echo "Set function: Failed\n";
+
+echo "---------------------------------\n";
+$rs = evtgame_thread_start('storage_job');
+
+//Give time for socket server to runging;
+//Try: telnet 127.0.0.1 8080
+$i=30;
+while(--$i)
+{
+	sleep(3);//runs 30 * 3 = 90 senconds
+}
+?>
+	]]>
+    </programlisting>
+   </example>
+  </para>
+ </refsect1>
+
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:1
+sgml-indent-data:t
+indent-tabs-mode:nil
+sgml-parent-document:nil
+sgml-default-dtd-file:"~/.phpdoc/manual.ced"
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+vim600: syn=xml fen fdm=syntax fdl=2 si
+vim: et tw=78 syn=sgml
+vi: ts=1 sw=1
+-->
